@@ -15,7 +15,7 @@ This aim of this project is to create a classification model to identify categor
 - disaster_categories.csv: contains the categories the message can be classified into
 - process_data.py: this script creates a SQLLite database containing the training data created from disaster_messages.csv and disaster_categories.csv
 ### models 
-- train_classifier.py: trains a multi class random forest classifier and saves the model
+- train_classifier.py: trains a multi class random forest classifier and saves the model. GridSearchCV was used to find the optimal parameters.
 ### app
 - run.py: creates web app that allows the user to input a message and returns a classification result
 
@@ -23,3 +23,6 @@ This aim of this project is to create a classification model to identify categor
 1. Run the process_data.py script
 2. Run the train_classifier.py script
 3. Run the run.py script
+
+## Web App
+
