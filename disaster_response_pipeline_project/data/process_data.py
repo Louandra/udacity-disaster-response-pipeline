@@ -1,16 +1,64 @@
 import sys
+import pandas as pd
 
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    """
+    Merges the messages and categories dataframes.
+    Args:
+    - messages_filepath: path to the messages CSV file
+    - categories_filepath: path to the categories CSV file
+    Returns:
+    - merged_df: Pandas dataframe containing messages and categories
+    """
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
+    # merge dataframes
+    merged_df = pd.merge(messages, categories, on="id") 
 
+    return merged_df
 
 def clean_data(df):
-    pass
+    """
+    Removes duplicates in the dataframe and expands the categories column
+    Args:
+    df: merged dataframe
+    Returns:
+    cleaned_df: cleaned dataframe
+    """
+    categories = df['categories'].str.split(";", expand=True)
+
+    # extract a list of new column names for categories
+    row = categories.iloc[0].tolist()
+    category_colnames = list(map(lambda cat:  cat.split('-')[0], row))
+
+    # convert category values to 1 or 0
+    for column in categories:
+    # set each value to be the last character of the string
+        categories[column] = categories[column].apply(lambda x: x.split('-')[1])
+        categories[column] = categories[column].astype(int)
+    
+    # Replace categories column in df with new category columns
+    df = df.drop(columns = ['categories'])
+    df = result = pd.concat([df, categories], axis=1)
+
+    # remove duplicates
+    df = df.drop_duplicates()
+
+    return df
 
 
 def save_data(df, database_filename):
-    pass  
+    """
+    Saves dataframe to a SQLLite database
+    Args:
+    - df: Pandas dataframe to save
+    - database_filename: name for the database
+    """
+    from sqlalchemy import create_engine
+
+    engine = create_engine('sqlite:///la_udacity_project.db')
+    df.to_sql(database_filename, engine, index=False)
 
 
 def main():
