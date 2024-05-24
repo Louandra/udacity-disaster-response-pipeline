@@ -57,8 +57,8 @@ def save_data(df, database_filename):
     """
     from sqlalchemy import create_engine
 
-    engine = create_engine('sqlite:///la_udacity_project.db')
-    df.to_sql(database_filename, engine, index=False)
+    engine = create_engine(f'sqlite:///{database_filename}')
+    df.to_sql('disaster_response', engine, index=False)
 
 
 def main():
