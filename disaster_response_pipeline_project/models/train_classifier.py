@@ -1,4 +1,9 @@
 import sys
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize 
+from nltk.stem.wordnet import WordNetLemmatizer
 
 
 def load_data(database_filepath):
@@ -8,9 +13,10 @@ def load_data(database_filepath):
     
     # load data from database
     # engine = create_engine('sqlite:///la_udacity_project.db')
-    engine = create_engine(database_filepath)
-    query = "SELECT * FROM disaster_response_data"
+    engine = create_engine(f'sqlite:///{database_filepath}')
+    query = "SELECT * FROM disaster_response"
     df = pd.read_sql_query(query, engine)
+    print(df.shape)
 
     X = df['message'].values
     Y = df.drop(columns = ['id', 'message', 'original', 'genre']).values
@@ -29,12 +35,6 @@ def tokenize(text):
     tokens (list): list of tokens in the text
     
     """
-    import nltk
-    nltk.download('stopwords')
-    from nltk.corpus import stopwords
-    from nltk.tokenize import word_tokenize 
-    from nltk.stem.wordnet import WordNetLemmatizer
-
     stop_words = stopwords.words("english")
     # convert text to lowercase
     text = text.lower()
@@ -80,19 +80,13 @@ def build_model(X_train, y_train):
     from sklearn.model_selection import GridSearchCV
 
     parameters = {
-        'features__text_pipeline__vect__ngram_range': ((1, 1), (1, 2)),
-        'clf__estimator__n_estimators': [50, 100, 150],
-        'clf__estimator__min_samples_split': [5, 10, 20]
+        'clf__estimator__n_estimators': [50],
+        'clf__estimator__min_samples_split': [5]
     }
 
-    cv = GridSearchCV(pipeline, param_grid=parameters, cv = 5)
-    cv.fit(X_train, y_train)
+    cv = GridSearchCV(pipeline, param_grid=parameters, cv = 2)
 
-    best_estimator = cv.best_estimator_
-    # get best model from gridsearch
-    model = best_estimator
-
-    return model
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -102,17 +96,16 @@ def evaluate_model(model, X_test, Y_test, category_names):
     - model: trained model
     - X_test: Text
     - Y_test: Labels
+    - category_names: class names
     """
     from sklearn.metrics import accuracy_score, classification_report
 
-    # predict on test set
+#     # predict on test set
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(Y_test, y_pred)
-    report = classification_report(Y_test, y_pred)
-
-    print("Accuracy:", accuracy)
-    print("Classification Report:")
-    print(report)
+#     report = classification_report(Y_test, y_pred, target_names=category_names)
+    
+#     print("Classification Report:")
+#     print(report)
     
     # accuracy for each class
     accuracies = [accuracy_score(Y_test[:, i], y_pred[:, i]) for i in range(Y_test.shape[1])]
@@ -121,7 +114,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 def save_model(model, model_filepath):
     import joblib
-    joblib.dump(model, f'{model_filepath}.pkl')
+    joblib.dump(model, f'{model_filepath}')
 
 def main():
     from sklearn.model_selection import train_test_split
@@ -132,10 +125,12 @@ def main():
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
         
         print('Building model...')
-        model = build_model()
+        model = build_model(X_train, Y_train)
         
         print('Training model...')
         model.fit(X_train, Y_train)
+
+        model = model.best_estimator_
         
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
