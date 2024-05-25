@@ -32,6 +32,9 @@ def clean_data(df):
     row = categories.iloc[0].tolist()
     category_colnames = list(map(lambda cat:  cat.split('-')[0], row))
 
+    # rename the columns in the categories dataframe
+    categories.columns = category_colnames
+
     # convert category values to 1 or 0
     for column in categories:
     # set each value to be the last character of the string
@@ -40,10 +43,13 @@ def clean_data(df):
     
     # Replace categories column in df with new category columns
     df = df.drop(columns = ['categories'])
-    df = result = pd.concat([df, categories], axis=1)
+    df = pd.concat([df, categories], axis=1)
 
     # remove duplicates
     df = df.drop_duplicates()
+
+    # drop rows where the 'related' column contains values of 2
+    df = df[df.related <= 1]
 
     return df
 
