@@ -64,7 +64,7 @@ def save_data(df, database_filename):
     from sqlalchemy import create_engine
 
     engine = create_engine(f'sqlite:///{database_filename}')
-    df.to_sql('disaster_response', engine, index=False)
+    df.to_sql('disaster_response', engine, index=False, if_exists='replace')
 
 
 def main():
